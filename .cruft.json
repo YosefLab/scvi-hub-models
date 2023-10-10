@@ -1,7 +1,7 @@
 {
   "template": "https://github.com/scverse/cookiecutter-scverse",
-  "commit": "154c706e1985c4b7ac13f4802eda1ab9c5e8a2e6",
-  "checkout": null,
+  "commit": "605f95714130c960bce12eab98a4e023e8932249",
+  "checkout": "v0.2.22",
   "context": {
     "cookiecutter": {
       "project_name": "scvi-hub-models",
