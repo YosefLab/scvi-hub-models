@@ -33,7 +33,7 @@ pip install scvi-hub-models
 1. Install the latest development version:
 
 ```bash
-pip install git+https://github.com/martinkim0/scvi-hub-models.git@main
+pip install git+https://github.com/YosefLab/scvi-hub-models.git@main
 ```
 
 ## Release notes
