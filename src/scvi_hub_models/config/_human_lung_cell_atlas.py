@@ -1,0 +1,23 @@
+_CONFIG = {
+    "legacy_model_url": "https://zenodo.org/records/7599104/files/HLCA_reference_model.zip",
+    "legacy_model_hash": "a7cd60f4342292b3cba54545bcd8a34decdc8e6b82163f009273d543e7e3910e",
+    "legacy_model_dir": "hlca_scanvi_reference_legacy",
+    "model_dir": "hlca_scanvi_reference",
+    "reference_adata_cxg_id": "066943a2-fdac-4b29-b348-40cede398e4e",
+    "reference_adata_fname": "hlca_core.h5ad",
+    "embedding_adata_url": "https://zenodo.org/records/7599104/files/HLCA_full_v1.1_emb.h5ad",
+    "embedding_adata_hash": "3e2c4da281b6883464b2a70bcc1562d1c4246de32093e7b08090673fbad56a97",
+    "embedding_adata_fname": "hlca_all_emb.h5ad",
+    "mini_model_dir": "hlca_scanvi_reference_mini",
+    "repo_name": "scvi-tools/human-lung-cell-atlas",
+    "metadata": {
+        "training_data_url": "https://cellxgene.cziscience.com/collections/6f6d381a-7701-4781-935c-db10d30de293",
+        "training_code_url": "https://github.com/LungCellAtlas/HLCA_reproducibility",
+        "tissues": ["nose", "respiratory airway", "lung parenchyma"],
+        "data_modalities": ["rna"],
+        "data_is_annotated": True,
+        "license_info": "cc-by-4.0",
+        "description": "The integrated Human Lung Cell Atlas (HLCA) represents the first large-scale, integrated single-cell reference atlas of the human lung.",
+        "references": "Lisa Sikkema, Ciro Ramírez-Suástegui, Daniel C. Strobl, Tessa E. Gillett, Luke Zappia, Elo Madissoon, Nikolay S. Markov, Laure-Emmanuelle Zaragosi, Yuge Ji, Meshal Ansari, Marie-Jeanne Arguel, Leonie Apperloo, Martin Banchero, Christophe Bécavin, Marijn Berg, Evgeny Chichelnitskiy, Mei-i Chung, Antoine Collin, Aurore C. A. Gay, Janine Gote-Schniering, Baharak Hooshiar Kashani, Kemal Inecik, Manu Jain, Theodore S. Kapellos, Tessa M. Kole, Sylvie Leroy, Christoph H. Mayr, Amanda J. Oliver, Michael von Papen, Lance Peter, Chase J. Taylor, Thomas Walzthoeni, Chuan Xu, Linh T. Bui, Carlo De Donno, Leander Dony, Alen Faiz, Minzhe Guo, Austin J. Gutierrez, Lukas Heumos, Ni Huang, Ignacio L. Ibarra, Nathan D. Jackson, Preetish Kadur Lakshminarasimha Murthy, Mohammad Lotfollahi, Tracy Tabib, Carlos Talavera-López, Kyle J. Travaglini, Anna Wilbrey-Clark, Kaylee B. Worlock, Masahiro Yoshida, Lung Biological Network Consortium, Maarten van den Berge, Yohan Bossé, Tushar J. Desai, Oliver Eickelberg, Naftali Kaminski, Mark A. Krasnow, Robert Lafyatis, Marko Z. Nikolic, Joseph E. Powell, Jayaraj Rajagopal, Mauricio Rojas, Orit Rozenblatt-Rosen, Max A. Seibold, Dean Sheppard, Douglas P. Shepherd, Don D. Sin, Wim Timens, Alexander M. Tsankov, Jeffrey Whitsett, Yan Xu, Nicholas E. Banovich, Pascal Barbry, Thu Elizabeth Duong, Christine S. Falk, Kerstin B. Meyer, Jonathan A. Kropski, Dana Pe’er, Herbert B. Schiller, Purushothama Rao Tata, Joachim L. Schultze, Sara A. Teichmann, Alexander V. Misharin, Martijn C. Nawijn, Malte D. Luecken, and Fabian J. Theis. An integrated cell atlas of the lung in health and disease. Nature Medicine, June 2023. doi:10.1038/s41591-023-02327-2.",
+    },
+}
