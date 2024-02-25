@@ -5,7 +5,7 @@ requires = ["hatchling"]
 [project]
 name = "scvi-hub-models"
 version = "0.1.0"
-description = "Workflow files for scvi-tools hub models."
+description = "Reproducibility workflows for pre-trained scvi-tools models on Hugging Face ."
 readme = "README.md"
 requires-python = ">=3.11"
 license = {file = "LICENSE"}
@@ -62,9 +62,6 @@ xfail_strict = true
 addopts = [
     "--import-mode=importlib",  # allow using test files with same name
 ]
-
-[tool.black]
-line-length = 120
 
 [tool.ruff]
 src = ["src"]
