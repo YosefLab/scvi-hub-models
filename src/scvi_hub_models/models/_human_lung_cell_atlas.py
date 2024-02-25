@@ -87,7 +87,7 @@ def postprocess_reference_adata(adata: "AnnData") -> "AnnData":
     ]
     feat_names = ["AL928768.3", "RP11-394O4.5", "RP3-492J12.2", "AP000769.1"]
     adata.var["feature_name"] = adata.var["feature_name"].cat.add_categories(feat_names)
-    for gene, feature in zip(gene_ids, feat_names):
+    for gene, feature in zip(gene_ids, feat_names):  # noqa: B905
         adata.var.loc[gene, "feature_name"] = feature
 
     return adata

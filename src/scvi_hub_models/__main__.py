@@ -1,26 +1,25 @@
-from scvi_hub_models.utils import wrap_kwargs
+import logging
+
+import click
+
+logging.basicConfig(level=logging.INFO)
 
 
-@wrap_kwargs
-def run_workflow(
-    model_name: str,
-    dry_run: bool = False,
-    repo_create: bool = False,
-) -> None:
+@click.command()
+@click.option("--model_name", type=str, help="Name of the model to run.")
+@click.option("--dry_run", type=bool, default=False, help="Dry run the workflow.")
+def run_workflow(model_name: str, dry_run: bool) -> None:
     """Run the workflow for a specific model."""
-    import logging
+    from importlib import import_module
 
-    logger = logging.getLogger(__name__)
+    _model_name = model_name.replace("-", "_")  # e.g. "test-scvi" -> "test_scvi"
+    workflow_module = import_module(f"scvi_hub_models.models._{_model_name}")
+    config_module = import_module(f"scvi_hub_models.config._{_model_name}")
+    Workflow = workflow_module._Workflow
+    CONFIG = config_module._CONFIG
 
-    if model_name == "heart_cell_atlas":
-        from scvi_hub_models.models.heart_cell_atlas import model_workflow
-    elif model_name == "human_lung_cell_atlas":
-        from scvi_hub_models.models.human_lung_cell_atlas import model_workflow
-    elif model_name == "tabula_sapiens":
-        from scvi_hub_models.models.tabula_sapiens import model_workflow
-
-    logger.info(f"Started running {model_name} workflow with `dry_run={dry_run}` and " f"`repo_create={repo_create}`.")
-    model_workflow(dry_run=dry_run, repo_create=repo_create)
+    workflow = Workflow(dry_run=dry_run, config=CONFIG)
+    workflow.run()
 
 
 if __name__ == "__main__":

@@ -4,10 +4,10 @@ requires = ["hatchling"]
 
 [project]
 name = "scvi-hub-models"
-version = "0.0.1"
-description = "A very interesting piece of code"
+version = "0.1.0"
+description = "Workflow files for scvi-tools hub models."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 license = {file = "LICENSE"}
 authors = [
     {name = "Martin Kim"},
@@ -19,9 +19,11 @@ urls.Documentation = "https://scvi-hub-models.readthedocs.io/"
 urls.Source = "https://github.com/YosefLab/scvi-hub-models"
 urls.Home-page = "https://github.com/YosefLab/scvi-hub-models"
 dependencies = [
-    "anndata",
-    # for debug logging (referenced from the issue template)
-    "session-info"
+    "cellxgene-census>=1.10.2",
+    "click",
+    "frozendict",
+    "pooch",
+    "scvi-tools[hub,scanpy]>=1.1.0",
 ]
 
 [project.optional-dependencies]

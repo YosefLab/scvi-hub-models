@@ -1,0 +1,4 @@
+name: Run workflow
+
+on:
+  workflow_dispatch:
