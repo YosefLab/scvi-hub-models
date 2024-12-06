@@ -2,6 +2,7 @@ import logging
 import os
 
 from anndata import AnnData
+from scvi.criticism import create_criticism_report
 from scvi.model import SCVI
 
 from scvi_hub_models.models import BaseModelWorkflow
@@ -36,17 +37,6 @@ class _Workflow(BaseModelWorkflow):
         model.train(max_epochs=1)
         return model
 
-    def save_model(self, model: SCVI | None) -> str | None:
-        logger.info("Saving the scVI model.")
-
-        if self.dry_run:
-            return None
-
-        model_path = os.path.join(self.save_dir, self.id)
-        model.save(model_path, save_anndata=True, overwrite=True)
-
-        return model_path
-
     @property
     def id(self) -> str:
         return "test-scvi"
@@ -57,6 +47,6 @@ class _Workflow(BaseModelWorkflow):
         adata = self.load_dataset()
         model = self.initialize_model(adata)
         model = self.train_model(model)
-        model_path = self.save_model(model)
-        hub_model = self.create_hub_model(model_path)
-        hub_model = self.upload_hub_model(hub_model)
+        model_path = self._minify_and_save_model(model, adata)
+        hub_model = self._create_hub_model(model_path)
+        hub_model = self._upload_hub_model(hub_model)

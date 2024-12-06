@@ -4,38 +4,22 @@
     "base_repo_name": "scvi-tools/tabula-sapiens",
     "extra_data_kwargs": {
         "tissues": [
-            "Bladder",
-            "Blood",
-            "Bone_Marrow",
-            "Eye",
-            "Fat",
-            "Heart",
-            "Large_Intestine",
-            "Liver",
-            "Lung",
-            "Lymph_Node",
-            "Mammary",
-            "Muscle",
-            "Pancreas",
-            "Prostate",
-            "Salivary_Gland",
-            "Skin",
-            "Small_Intestine",
-            "Spleen",
-            "Thymus",
-            "Tongue",
-            "Trachea",
-            "Uterus",
             "Vasculature"
         ],
-        "zenodo_url": "https://zenodo.org/api/records/14286626",
+        "model_hashes": {
+            "Vasculature": "79e2a4a93a024ded96c8c294c328236ca8c83839c171d7adc49f95c781cf9503"
+        },
+        "adata_hashes": {
+            "Vasculature": "bf4ce2a88de4fdab1e2f07128dc25aa055064c853e767e1cc015ce89d49ddf4c"
+        },
+        "base_url": "https://zenodo.org/records/7608635/files/",
         "models_suffix": "_pretrained_models.tar.gz",
         "adata_suffix": "_training_data.h5ad",
         "models": [
             "SCVI",
             "SCANVI",
             "CondSCVI",
-            "Stereoscope"
+            "StereoScope"
         ]
     },
     "metadata": {

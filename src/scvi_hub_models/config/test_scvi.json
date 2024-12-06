@@ -1,0 +1,20 @@
+{
+    "model_dir": "test_scvi",
+    "model_class": "SCVI",
+    "repo_name": "scvi-tools/test-scvi",
+    "collection_name": "test",
+    "minify_model": false,
+    "extra_data_kwargs": {},
+    "metadata": {
+        "tissues": ["synthetic"],
+        "data_modalities": ["rna"],
+        "data_is_annotated": false,
+        "license_info": "cc-by-4.0",
+        "description": "scVI model trained on synthetic IID data and uploaded with the full training data.",
+        "references": "scvi-tools team"
+    },
+    "criticism_settings": {
+        "n_samples": 3,
+        "cell_type_key": null
+    }
+}

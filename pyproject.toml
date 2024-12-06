@@ -10,10 +10,10 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = {file = "LICENSE"}
 authors = [
-    {name = "Martin Kim"},
+    {name = "Martin Kim", "Can Ergen"},
 ]
 maintainers = [
-    {name = "Martin Kim", email = "martinkim@berkeley.edu"},
+    {name = "Can Ergen", email = "cergen@berkeley.edu"},
 ]
 urls.Documentation = "https://scvi-hub-models.readthedocs.io/"
 urls.Source = "https://github.com/YosefLab/scvi-hub-models"
@@ -23,7 +23,7 @@ dependencies = [
     "click",
     "frozendict",
     "pooch",
-    "scvi-tools[hub,scanpy]>=1.1.0",
+    "scvi-tools[hub,scanpy]>=1.2.0",
 ]
 
 [project.optional-dependencies]
