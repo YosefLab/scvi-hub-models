@@ -1,5 +1,6 @@
 import logging
 import os
+from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import anndata
@@ -9,8 +10,6 @@ from pooch import retrieve
 from scvi.criticism import create_criticism_report
 from scvi.hub import HubMetadata, HubModel, HubModelCardHelper
 from scvi.model.base import BaseModelClass
-
-from scvi_hub_models.utils import make_parents
 
 logger = logging.getLogger(__name__)
 
@@ -50,8 +49,7 @@ class BaseModelWorkflow:
             raise AttributeError("`save_dir` can only be set once.")
         elif path is None:
             path = TemporaryDirectory().name
-
-        make_parents(path)
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
         self._save_dir = path
 
     @property
