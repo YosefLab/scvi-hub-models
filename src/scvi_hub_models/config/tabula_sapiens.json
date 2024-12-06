@@ -31,12 +31,7 @@
         "zenodo_url": "https://zenodo.org/api/records/14286626",
         "models_suffix": "_pretrained_models.tar.gz",
         "adata_suffix": "_training_data.h5ad",
-        "models": [
-            "SCVI",
-            "SCANVI",
-            "CondSCVI",
-            "Stereoscope"
-        ]
+        "models": ["SCVI", "SCANVI", "CondSCVI", "Stereoscope"]
     },
     "metadata": {
         "tissues": ["various"],

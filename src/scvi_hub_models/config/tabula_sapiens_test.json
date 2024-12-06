@@ -3,9 +3,7 @@
     "model_class": "various",
     "base_repo_name": "scvi-tools/tabula-sapiens",
     "extra_data_kwargs": {
-        "tissues": [
-            "Vasculature"
-        ],
+        "tissues": ["Vasculature"],
         "model_hashes": {
             "Vasculature": "79e2a4a93a024ded96c8c294c328236ca8c83839c171d7adc49f95c781cf9503"
         },
@@ -15,12 +13,7 @@
         "base_url": "https://zenodo.org/records/7608635/files/",
         "models_suffix": "_pretrained_models.tar.gz",
         "adata_suffix": "_training_data.h5ad",
-        "models": [
-            "SCVI",
-            "SCANVI",
-            "CondSCVI",
-            "StereoScope"
-        ]
+        "models": ["SCVI", "SCANVI", "CondSCVI", "StereoScope"]
     },
     "metadata": {
         "tissues": ["various"],

@@ -10,7 +10,8 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = {file = "LICENSE"}
 authors = [
-    {name = "Martin Kim", "Can Ergen"},
+    {name = "Martin Kim"},
+    {name = "Can Ergen"},
 ]
 maintainers = [
     {name = "Can Ergen", email = "cergen@berkeley.edu"},
