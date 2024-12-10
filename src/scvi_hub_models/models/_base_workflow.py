@@ -4,15 +4,55 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import anndata
+import git
+import mudata
 from anndata import __version__ as anndata_version
+from dvc.repo import Repo
 from frozendict import frozendict
 from pooch import retrieve
 from scvi.criticism import create_criticism_report
 from scvi.hub import HubMetadata, HubModel, HubModelCardHelper
 from scvi.model.base import BaseModelClass
 
+import subprocess, os
+from pydrive.auth import GoogleAuth
+from pydrive.drive import GoogleDrive
+
+
+def upload_gdrive(path):
+    remote_url = subprocess.check_output(["dvc", "remote", "list"], text=True).split()[-1]
+
+    # Extract the Google Drive folder ID from the remote URL
+    folder_id = remote_url.split("gdrive://")[-1]
+
+    # Check if DVC detected an update
+    if "modified" in subprocess.check_output(["dvc", "diff", "--json"], text=True):
+        GoogleAuth().LocalWebserverAuth()
+        drive = GoogleDrive(GoogleAuth())
+        file = drive.CreateFile({"title": os.path.basename(path), "parents": [{"id": folder_id}]})
+        file.SetContentFile(path)
+        file.Upload()
+        print(f"Uploaded {path} to Google Drive folder {folder_id}.")
+
+# Specify your repository and target file
+repo_path = "."
+dvc_repo = Repo(repo_path)
+git_repo = git.Repo(repo_path)
+
 logger = logging.getLogger(__name__)
 
+SUPPORTED_PPC_MODELS = [
+    "SCVI",
+    "SCANVI",
+    "CondSCVI",
+    "TOTALVI",
+]
+
+SUPPORTED_MINIFIED_MODELS = [
+    "SCVI",
+    "SCANVI",
+    "TOTALVI",
+]
 
 class BaseModelWorkflow:
     """Base class for model workflows.
@@ -74,6 +114,29 @@ class BaseModelWorkflow:
             value = frozendict(value)
         self._config = value
 
+    def get_adata(self) -> anndata.AnnData | None:
+        """Download and load the dataset."""
+        logger.info("Loading dataset.")
+        if self.dry_run:
+            return None
+        if self.config['reload_data']:
+            path_file = os.path.join('data/', self.config['extra_data_kwargs']['large_training_file_name'])
+            adata = self.download_adata()
+            dvc_repo.add(path_file)
+            git_repo.index.commit(f"Track {path_file} with DVC")
+            print(f"Pushing {path_file} to DVC remote...")
+            dvc_repo.push()
+            git_repo.remote().push()
+            upload_gdrive(path_file)
+        else:
+            path_file = os.path.join('data/', self.config['extra_data_kwargs']['large_training_file_name'])
+            dvc_repo.pull([path_file])
+            if path_file.endswith(".h5mu"):
+                adata = mudata.read_h5mu(path_file)
+            else:
+                adata = anndata.read_h5ad(path_file)
+        return adata
+
     def _get_adata(self, url: str, hash: str, file_path: str) -> str:
         logger.info("Downloading and reading data.")
         if self.dry_run:
@@ -115,7 +178,7 @@ class BaseModelWorkflow:
         elif model_name == "CondSCVI":
             from scvi.model import CondSCVI
             model_cls = CondSCVI
-        elif model_name == "RNAStereoscope":
+        elif model_name == "Stereoscope":
             from scvi.external import RNAStereoscope
             model_cls = RNAStereoscope
         else:
@@ -174,7 +237,7 @@ class BaseModelWorkflow:
 
         if not os.path.exists(mini_model_path):
             os.makedirs(mini_model_path)
-        if self.config.get("create_criticism_report", True):
+        if self.config.get("create_criticism_report", True) and model.__class__.__name__ in SUPPORTED_PPC_MODELS:
             create_criticism_report(
                 model,
                 save_folder=mini_model_path,
@@ -182,17 +245,15 @@ class BaseModelWorkflow:
                 label_key=self.config["criticism_settings"].get("cell_type_key", None)
             )
 
-        if self.config.get("minify_model", True):
+        if self.config.get("minify_model", True) and model.__class__.__name__ in SUPPORTED_MINIFIED_MODELS:
             qzm_key = f"{model_name.lower()}_latent_qzm"
             qzv_key = f"{model_name.lower()}_latent_qzv"
             if qzm_key not in adata.obsm and qzv_key not in adata.obsm:
                 qzm, qzv = model.get_latent_representation(give_mean=False, return_dist=True)
                 adata.obsm[qzm_key] = qzm
                 adata.obsm[qzv_key] = qzv
-            model.minify_adata(use_latent_qzm_key=qzm_key, use_latent_qzv_key=qzv_key)
+                model.minify_adata(use_latent_qzm_key=qzm_key, use_latent_qzv_key=qzv_key)
         model.save(mini_model_path, overwrite=True, save_anndata=True)
-
-        print(model.adata)
 
         return mini_model_path
 
@@ -201,7 +262,6 @@ class BaseModelWorkflow:
         collection_name = self.config.get("collection_name", None)
         if repo_name is None:
             repo_name = self.repo_name
-        print('TTTTTT', repo_name)
         logger.info(f"Uploading the HubModel to {repo_name}. Collection: {collection_name}.")
 
         if not self.dry_run:
