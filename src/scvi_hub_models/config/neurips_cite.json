@@ -1,0 +1,22 @@
+{
+    "model_dir": "bone_marrow_cite",
+    "model_class": "TOTALVI",
+    "repo_name": "scvi-tools/bone_marrow_cite_totalvi",
+    "extra_data_kwargs": {
+        "reference_adata_fname": "bmmc_cite.h5ad"
+    },
+    "metadata": {
+        "training_data_url": "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE194122&format=file&file=GSE194122%5Fopenproblems%5Fneurips2021%5Fcite%5FBMMC%5Fprocessed%2Eh5ad%2Egz",
+        "training_code_url": "https://github.com/YosefLab/scvi-hub-models/",
+        "tissues": ["bone marrow"],
+        "data_modalities": ["rna", "protein"],
+        "data_is_annotated": true,
+        "license_info": "cc-by-4.0",
+        "description": "Bone marrow CITE-seq data generated for NEURIPS 2021.",
+        "references": "A sandbox for prediction and integration of DNA, RNA, and proteins in single cells; https://datasets-benchmarks-proceedings.neurips.cc/paper_files/paper/2021/file/158f3069a435b314a80bdcb024f8e422-Paper-round2.pdf."
+    },
+    "criticism_settings": {
+        "n_samples": 3,
+        "cell_type_key": "cell_type"
+    }
+}

@@ -22,7 +22,7 @@ class _Workflow(BaseModelWorkflow):
         """
         logging.info(f"Downloading models for {tissue}.")
         if self.dry_run:
-            return ""
+            return None
         from pathlib import Path
 
         from pooch import Untar, retrieve
@@ -39,6 +39,9 @@ class _Workflow(BaseModelWorkflow):
 
     def get_download_links(self):
         """Download the datasets for a list of tissues from Zenodo."""
+        logging.info("Get download links from Zenodo.")
+        if self.dry_run:
+            return None
         import requests
         res = requests.get(self.config["extra_data_kwargs"]["zenodo_url"])
         files = res.json()['files']
@@ -60,12 +63,17 @@ class _Workflow(BaseModelWorkflow):
 
     def _copy_tensorboard_logs(self, model_dir, model_path):
         """Copy tensorboard logs from model_dir to model_path."""
+        logging.info("Copy tensorboard logs.")
+        if self.dry_run:
+            return None
         import os
         import shutil
 
-        tensorboard_logs = os.path.join(model_dir, "tensorboard_logs")
+        tensorboard_logs = os.path.join(model_dir, "lightning_logs")
         if os.path.exists(tensorboard_logs):
-            shutil.copytree(tensorboard_logs, os.path.join(model_path, "tensorboard_logs"))
+            import shutil
+
+            shutil.copytree(tensorboard_logs, os.path.join(model_path, "lightning_logs"), dirs_exist_ok=True)
 
     def run(self):
         super().run()

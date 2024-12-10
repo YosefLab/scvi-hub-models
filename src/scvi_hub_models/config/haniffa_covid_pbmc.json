@@ -1,0 +1,23 @@
+{
+    "model_dir": "haniffa_covid_pbmc",
+    "model_class": "TOTALVI",
+    "repo_name": "scvi-tools/haniffa_covid_pbmc_totalvi",
+    "extra_data_kwargs": {
+        "reference_adata_cxg_id": "c7775e88-49bf-4ba2-a03b-93f00447c958",
+        "reference_adata_fname": "haniffa_covid_pbmc.h5ad"
+    },
+    "metadata": {
+        "training_data_url": "https://datasets.cellxgene.cziscience.com/5ad66a4f-d619-4cb3-8015-a87c755647b3.h5ad",
+        "training_code_url": "https://github.com/YosefLab/Thymus_CITE-seq/blob/main/totalVI_AllData/totalVI_thymus111.ipynb",
+        "tissues": ["thymus"],
+        "data_modalities": ["rna", "protein"],
+        "data_is_annotated": true,
+        "license_info": "cc-by-4.0",
+        "description": "CITE-seq to measure RNA and surface proteins in thymocytes from wild-type and T cell lineage-restricted mice to generate a comprehensive timeline of cell state for each T cell lineage.",
+        "references": "Steier, Z., Aylard, D.A., McIntyre, L.L. et al. Single-cell multiomic analysis of thymocyte development reveals drivers of CD4+ T cell and CD8+ T cell lineage commitment. Nat Immunol 24, 1579–1590 (2023). https://doi.org/10.1038/s41590-023-01584-0."
+    },
+    "criticism_settings": {
+        "n_samples": 3,
+        "cell_type_key": "cell_type"
+    }
+}

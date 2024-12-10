@@ -34,8 +34,9 @@
         "models": ["SCVI", "SCANVI", "CondSCVI", "Stereoscope"]
     },
     "metadata": {
+        "training_code_url": "https://github.com/YosefLab/scvi-hub-models/blob/main/src/scvi_hub_models/TS_train_all_tissues.ipynb",
         "tissues": ["various"],
-        "data_modalities": ["rna"],
+        "data_modalities": ["rna"],        
         "data_is_annotated": true,
         "license_info": "cc-by-4.0",
         "description": "Tabula Sapiens is a benchmark, first-draft human cell atlas of nearly 500,000 cells from 24 organs of 15 normal human subjects.",
