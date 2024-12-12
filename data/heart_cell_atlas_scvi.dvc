@@ -1,0 +1,6 @@
+outs:
+- md5: 75670e08aee1039bc163245eb6fc2152.dir
+  size: 3371610
+  nfiles: 1
+  hash: md5
+  path: heart_cell_atlas_scvi

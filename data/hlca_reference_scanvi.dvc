@@ -1,0 +1,6 @@
+outs:
+- md5: 5c77b351ae8e005c3180d45cf1281586.dir
+  size: 5825950
+  nfiles: 1
+  hash: md5
+  path: hlca_reference_scanvi

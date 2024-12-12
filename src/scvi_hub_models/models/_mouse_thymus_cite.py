@@ -23,28 +23,35 @@ class _Workflow(BaseModelWorkflow):
         return sc.read_h5ad(adata_path)
 
     def _preprocess_adata(self, adata: AnnData) -> AnnData:
-        import scanpy as sc
-
-        print(adata, adata.X.data)
-
-        sc.pp.filter_genes(adata, min_counts=3)
         matching_indices = [adata.raw.var_names.get_loc(gene) for gene in adata.var_names]
         adata.layers["counts"] = adata.raw.X[:, matching_indices].copy()
-        protein_adata = AnnData(adata.obsm["protein_expression"])
+        sc.pp.highly_variable_genes(
+            adata,
+            n_top_genes=4000,
+            subset=True,
+            layer="counts",
+            flavor="seurat_v3",
+            span=1.0,
+        )
+        protein_adata = AnnData(adata.obsm["protein_expression"], obs=adata.obs)
         protein_adata.obs_names = adata.obs_names
         del adata.obsm["protein_expression"]
-        adata = MuData({"rna": adata, "protein": protein_adata})
+        del adata.obsm['denoised_genes']
+        del adata.obsm['denoised_proteins']
+        del adata.uns['AB_adata']
+        mdata = MuData({"rna": adata, "protein": protein_adata})
+        print(mdata)
 
-        return adata
+        return mdata
 
-    def download_adata(self) -> AnnData | None:
+    def download_adata(self, path) -> AnnData | None:
         """Download and load the dataset."""
-        logger.info(f"Saving dataset to {self.save_dir} and preprocessing.")
+        logger.info(f"Saving dataset to {path} and preprocessing.")
         if self.dry_run:
             return None
         adata = self._load_adata()
         mdata = self._preprocess_adata(adata)
-        mdata.write_h5mu(f'data/{self.config['extra_data_kwargs']['large_training_file_name']}')
+        mdata.write_h5mu(path)
         return mdata
 
     def _initialize_model(self, mdata: MuData) -> TOTALVI:
@@ -67,7 +74,7 @@ class _Workflow(BaseModelWorkflow):
 
         return model
 
-    def get_model(self, adata) -> TOTALVI | None:
+    def load_model(self, adata) -> TOTALVI | None:
         """Initialize and train the scVI model."""
         logger.info("Training the scVI model.")
         if self.dry_run:
