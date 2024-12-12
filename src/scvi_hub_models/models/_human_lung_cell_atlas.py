@@ -10,6 +10,9 @@ logger = logging.getLogger(__name__)
 
 class _Workflow(BaseModelWorkflow):
 
+    def load_model(self, adata: anndata.AnnData) -> BaseModelWorkflow:
+        return self.default_load_model(adata, self.config['model_class'])
+
     def _download_model(self):
         from pathlib import Path
 
@@ -23,7 +26,6 @@ class _Workflow(BaseModelWorkflow):
             path=self.save_dir,
         )
         untarred = sorted(untarred)
-        print(untarred)
         return str(Path(untarred[0]).parent)
 
     def _get_model(self) -> str:
@@ -64,7 +66,7 @@ class _Workflow(BaseModelWorkflow):
 
         # .X does not contain raw counts initially
         adata.X = adata.raw.X
-        _, genes, _, _ = _load_saved_files(model_path, load_adata=False)
+        _, genes, _, _ = _load_saved_files(os.path.join(self.save_dir, self.config["model_dir"]), load_adata=False)
         adata = adata[:, adata.var.index.isin(genes)].copy()
 
         # get rid of some var columns that we dont need
@@ -108,13 +110,14 @@ class _Workflow(BaseModelWorkflow):
         adata = anndata.io.read_h5ad(adata)
         return adata[adata.obs["core_or_extension"] == "core"].copy()
 
-    def _get_adata(self, model_path: str) -> anndata.AnnData:
+    def download_adata(self, path) -> anndata.AnnData:
         logging.info("Loading data.")
         if self.dry_run:
             return None
         ref_adata = self._download_reference_adata()
-        ref_adata = self._preprocess_reference_adata(ref_adata, model_path)
+        ref_adata = self._preprocess_reference_adata(ref_adata, self.model_path)
         ref_adata = self._postprocess_reference_adata(ref_adata)
+        ref_adata.write_h5ad(path)
         return ref_adata
 
     @property
@@ -124,9 +127,9 @@ class _Workflow(BaseModelWorkflow):
     def run(self):
         super().run()
 
-        model_path = self._get_model()
-        adata = self._get_adata(model_path)
-        model = self._load_model(model_path, adata, "SCANVI")
+        self._get_model()
+        adata = self.get_adata()
+        model = self.get_model(adata)
         model_path = self._minify_and_save_model(model, adata)
         hub_model = self._create_hub_model(model_path)
         hub_model = self._upload_hub_model(hub_model)

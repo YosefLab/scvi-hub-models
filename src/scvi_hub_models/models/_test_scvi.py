@@ -12,29 +12,23 @@ logger = logging.getLogger(__name__)
 
 class _Workflow(BaseModelWorkflow):
 
-    def load_dataset(self) -> AnnData | None:
+    def download_adata(self, path) -> AnnData | None:
         from scvi.data import synthetic_iid
 
         logger.info("Loading synthetic dataset.")
         if self.dry_run:
             return None
+        adata = synthetic_iid()
+        adata.write_h5ad(path)
+        return adata
 
-        return synthetic_iid()
-
-    def initialize_model(self, adata: AnnData | None) -> SCVI | None:
-        logger.info("Initializing the scVI model.")
-        if self.dry_run:
-            return None
-
-        SCVI.setup_anndata(adata)
-        return SCVI(adata)
-
-    def train_model(self, model: SCVI | None) -> SCVI | None:
+    def load_model(self, adata: AnnData) -> SCVI:
         logger.info("Training the scVI model.")
         if self.dry_run:
-            return model
-
-        model.train(max_epochs=1)
+            return None
+        SCVI.setup_anndata(adata)
+        model = SCVI(adata)
+        model.train(max_epochs=10)
         return model
 
     @property
@@ -44,9 +38,8 @@ class _Workflow(BaseModelWorkflow):
     def run(self):
         super().run()
 
-        adata = self.load_dataset()
-        model = self.initialize_model(adata)
-        model = self.train_model(model)
+        adata = self.get_adata()
+        model = self.get_model(adata)
         model_path = self._minify_and_save_model(model, adata)
         hub_model = self._create_hub_model(model_path)
         hub_model = self._upload_hub_model(hub_model)

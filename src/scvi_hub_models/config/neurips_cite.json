@@ -1,9 +1,12 @@
 {
-    "model_dir": "bone_marrow_cite",
+    "model_dir": "bone_marrow_cite_totalvi",
     "model_class": "TOTALVI",
     "repo_name": "scvi-tools/bone_marrow_cite_totalvi",
     "extra_data_kwargs": {
-        "reference_adata_fname": "bmmc_cite.h5ad"
+        "url": "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE194122&format=file&file=GSE194122%5Fopenproblems%5Fneurips2021%5Fcite%5FBMMC%5Fprocessed%2Eh5ad%2Egz",
+        "hash": "b9b50fade9349719cba23c97c6515d3501a32ee3735fe95fe51221d2e8a5f361",
+        "reference_adata_fname": "bmmc_cite.h5ad.gz",
+        "large_training_file_name": "neurips_bone_marrow_cite.h5mu"
     },
     "metadata": {
         "training_data_url": "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE194122&format=file&file=GSE194122%5Fopenproblems%5Fneurips2021%5Fcite%5FBMMC%5Fprocessed%2Eh5ad%2Egz",

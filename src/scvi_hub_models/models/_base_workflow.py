@@ -14,28 +14,9 @@ from scvi.criticism import create_criticism_report
 from scvi.hub import HubMetadata, HubModel, HubModelCardHelper
 from scvi.model.base import BaseModelClass
 
-import subprocess, os
-from pydrive.auth import GoogleAuth
-from pydrive.drive import GoogleDrive
-
-
-def upload_gdrive(path):
-    remote_url = subprocess.check_output(["dvc", "remote", "list"], text=True).split()[-1]
-
-    # Extract the Google Drive folder ID from the remote URL
-    folder_id = remote_url.split("gdrive://")[-1]
-
-    # Check if DVC detected an update
-    if "modified" in subprocess.check_output(["dvc", "diff", "--json"], text=True):
-        GoogleAuth().LocalWebserverAuth()
-        drive = GoogleDrive(GoogleAuth())
-        file = drive.CreateFile({"title": os.path.basename(path), "parents": [{"id": folder_id}]})
-        file.SetContentFile(path)
-        file.Upload()
-        print(f"Uploaded {path} to Google Drive folder {folder_id}.")
-
 # Specify your repository and target file
-repo_path = "."
+
+repo_path = os.path.abspath(Path(__file__).parent.parent.parent.parent)
 dvc_repo = Repo(repo_path)
 git_repo = git.Repo(repo_path)
 
@@ -67,17 +48,25 @@ class BaseModelWorkflow:
     config
         A :class:`~frozendict.frozendict` containing the configuration for the workflow. Can only
         be set once.
+    reload_data
+        If ``True``, the data will be reloaded. Otherwise, it will be pulled from DVC. Defaults to ``False``.
+    reload_model
+        If ``True``, the model will be reloaded. Otherwise, it will be pulled from DVC. Defaults to ``False``.
     """
 
     def __init__(
         self,
         save_dir: str | None = None,
         dry_run: bool = False,
-        config: frozendict | None = None
+        config: frozendict | None = None,
+        reload_data: bool = True,
+        reload_model: bool = True,
     ):
         self.save_dir = save_dir
         self.dry_run = dry_run
         self.config = config
+        self.reload_data = reload_data
+        self.reload_model = reload_model
 
     @property
     def save_dir(self):
@@ -114,22 +103,41 @@ class BaseModelWorkflow:
             value = frozendict(value)
         self._config = value
 
+    @property
+    def reload_data(self):
+        return self._reload_data
+
+    @reload_data.setter
+    def reload_data(self, value: bool):
+        if hasattr(self, "_reload_data"):
+            raise AttributeError("`reload_data` can only be set once.")
+        self._reload_data = value
+
+    @property
+    def reload_model(self):
+        return self._reload_model
+
+    @reload_model.setter
+    def reload_model(self, value: bool):
+        if hasattr(self, "_reload_model"):
+            raise AttributeError("`reload_model` can only be set once.")
+        self._reload_model = value
+
     def get_adata(self) -> anndata.AnnData | None:
         """Download and load the dataset."""
         logger.info("Loading dataset.")
         if self.dry_run:
             return None
-        if self.config['reload_data']:
-            path_file = os.path.join('data/', self.config['extra_data_kwargs']['large_training_file_name'])
-            adata = self.download_adata()
+        if self.reload_data:
+            path_file = os.path.join(f'{repo_path}/data/', self.config['extra_data_kwargs']['large_training_file_name'])
+            print(path_file)
+            adata = self.download_adata(path_file)
             dvc_repo.add(path_file)
             git_repo.index.commit(f"Track {path_file} with DVC")
-            print(f"Pushing {path_file} to DVC remote...")
             dvc_repo.push()
             git_repo.remote().push()
-            upload_gdrive(path_file)
         else:
-            path_file = os.path.join('data/', self.config['extra_data_kwargs']['large_training_file_name'])
+            path_file = os.path.join(f'{repo_path}/data/', self.config['extra_data_kwargs']['large_training_file_name'])
             dvc_repo.pull([path_file])
             if path_file.endswith(".h5mu"):
                 adata = mudata.read_h5mu(path_file)
@@ -137,34 +145,40 @@ class BaseModelWorkflow:
                 adata = anndata.read_h5ad(path_file)
         return adata
 
-    def _get_adata(self, url: str, hash: str, file_path: str) -> str:
+    def get_model(self, adata) -> BaseModelClass | None:
+        """Download and load the model."""
+        logger.info("Loading model.")
+        if self.dry_run:
+            return None
+        if self.reload_model:
+            path_file = os.path.join(f'{repo_path}/data/', self.config['model_dir'])
+            model = self.load_model(adata)
+            model.save(path_file, overwrite=True, save_anndata=False)
+            dvc_repo.add(path_file)
+            git_repo.index.commit(f"Track {path_file} with DVC")
+            dvc_repo.push()
+            git_repo.remote().push()
+        else:
+            path_file = os.path.join(f'{repo_path}/data/', self.config['model_dir'])
+            dvc_repo.pull([path_file])
+            model = self.default_load_model(adata, self.config['model_class'], path_file)
+        return model
+
+    def _get_adata(self, url: str, hash: str, file_path: str, processor: str | None = None) -> str:
         logger.info("Downloading and reading data.")
         if self.dry_run:
             return None
 
-        retrieve(
+        file_out = retrieve(
             url=url,
             known_hash=hash,
             fname=file_path,
             path=self.save_dir,
-            processor=None,
+            processor=processor,
         )
-        return anndata.read_h5ad(os.path.join(self.save_dir, file_path))
+        return anndata.read_h5ad(file_out)
 
-    def _download_model(self, url: str, hash: str, file_path: str) -> str:
-        logger.info("Downloading model.")
-        if self.dry_run:
-            return None
-
-        return retrieve(
-            url=url, #
-            known_hash=hash, #config["adata_hashes"][tissue],
-            fname=file_path, # f"{tissue}_adata.h5ad"
-            path=self.save_dir,
-            processor=None,
-        )
-
-    def _load_model(self, model_path: str, adata: anndata.AnnData, model_name: str):
+    def default_load_model(self, adata: anndata.AnnData, model_name: str, model_path: str | None = None) -> BaseModelClass:
         """Load the model."""
         logger.info("Loading model.")
         if self.dry_run:
@@ -178,47 +192,19 @@ class BaseModelWorkflow:
         elif model_name == "CondSCVI":
             from scvi.model import CondSCVI
             model_cls = CondSCVI
+        elif model_name == "TOTALVI":
+            from scvi.model import TOTALVI
+            model_cls = TOTALVI
         elif model_name == "Stereoscope":
             from scvi.external import RNAStereoscope
             model_cls = RNAStereoscope
         else:
             raise ValueError(f"Model {model_name} not recognized.")
 
-        model = model_cls.load(os.path.join(self.save_dir, model_path), adata=adata)
+        if model_path is None:
+            model_path = os.path.join(self.save_dir, self.config["model_dir"])
+        model = model_cls.load(model_path, adata=adata)
         return model
-
-    def _create_hub_model(
-            self,
-            model_path: str,
-            training_data_url: str | None = None
-        ) -> HubModel | None:
-        logger.info("Creating the HubModel.")
-        if self.dry_run:
-            return None
-
-        if training_data_url is None:
-            training_data_url = self.config.get("training_data_url", None)
-
-        metadata = self.config["metadata"]
-        hub_metadata = HubMetadata.from_dir(
-            model_path,
-            anndata_version=anndata_version
-        )
-        model_card = HubModelCardHelper.from_dir(
-            model_path,
-            anndata_version=anndata_version,
-            license_info=metadata.get("license_info", "mit"),
-            data_modalities=metadata.get("data_modalities", None),
-            tissues=metadata.get("tissues", None),
-            data_is_annotated=metadata.get("data_is_annotated", False),
-            data_is_minified=metadata.get("data_is_minified", False),
-            training_data_url=training_data_url,
-            training_code_url=metadata.get("training_code_url", None),
-            description=metadata.get("description", None),
-            references=metadata.get("references", None),
-        )
-
-        return HubModel(model_path, hub_metadata, model_card)
 
     def _minify_and_save_model(
             self,
@@ -252,10 +238,46 @@ class BaseModelWorkflow:
                 qzm, qzv = model.get_latent_representation(give_mean=False, return_dist=True)
                 adata.obsm[qzm_key] = qzm
                 adata.obsm[qzv_key] = qzv
-                model.minify_adata(use_latent_qzm_key=qzm_key, use_latent_qzv_key=qzv_key)
+                if isinstance(adata, mudata.MuData):
+                    model.minify_mudata(use_latent_qzm_key=qzm_key, use_latent_qzv_key=qzv_key)
+                else:
+                    model.minify_adata(use_latent_qzm_key=qzm_key, use_latent_qzv_key=qzv_key)
         model.save(mini_model_path, overwrite=True, save_anndata=True)
 
         return mini_model_path
+
+    def _create_hub_model(
+            self,
+            model_path: str,
+            training_data_url: str | None = None
+        ) -> HubModel | None:
+        logger.info("Creating the HubModel.")
+        if self.dry_run:
+            return None
+
+        if training_data_url is None:
+            training_data_url = self.config.get("training_data_url", None)
+
+        metadata = self.config["metadata"]
+        hub_metadata = HubMetadata.from_dir(
+            model_path,
+            anndata_version=anndata_version
+        )
+        model_card = HubModelCardHelper.from_dir(
+            model_path,
+            anndata_version=anndata_version,
+            license_info=metadata.get("license_info", "mit"),
+            data_modalities=metadata.get("data_modalities", None),
+            tissues=metadata.get("tissues", None),
+            data_is_annotated=metadata.get("data_is_annotated", False),
+            data_is_minified=metadata.get("data_is_minified", False),
+            training_data_url=training_data_url,
+            training_code_url=metadata.get("training_code_url", None),
+            description=metadata.get("description", None),
+            references=metadata.get("references", None),
+        )
+
+        return HubModel(model_path, hub_metadata, model_card)
 
     def _upload_hub_model(self, hub_model: HubModel, repo_name: str | None = None, **kwargs) -> HubModel:
         """Upload the HubModel to Hugging Face."""
