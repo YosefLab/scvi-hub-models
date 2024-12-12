@@ -2,6 +2,10 @@
     "model_dir": "heart_cell_atlas_scvi",
     "model_class": "SCVI",
     "repo_name": "scvi-tools/heart-cell-atlas-scvi",
+    "extra_data_kwargs": {
+        "reference_adata_fname": "heart_cell_atlas.h5ad",
+        "large_training_file_name": "heart_cell_atlas.h5ad"
+    },
     "metadata": {
         "training_data_url": "https://www.heartcellatlas.org/#DataSources",
         "tissues": ["heart"],

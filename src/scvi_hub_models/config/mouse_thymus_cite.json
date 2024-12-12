@@ -1,11 +1,10 @@
 {
-    "model_dir": "mouse_thymus_cite",
+    "model_dir": "mouse_thymus_cite_totalvi",
     "model_class": "TOTALVI",
-    "repo_name": "scvi-tools/mouse_thymus_totalvi",
-    "reload_data": true,
+    "repo_name": "scvi-tools/mouse_thymus_cite_totalvi",
     "extra_data_kwargs": {
         "reference_adata_cxg_id": "c14c54f8-85d8-45db-9de7-6ab572cc748a",
-        "reference_adata_fname": "thymus_cite.h5ad",
+        "reference_adata_fname": "mouse_thymus_cite.h5ad",
         "large_training_file_name": "mouse_thymus_cite.h5mu"
     },
     "metadata": {

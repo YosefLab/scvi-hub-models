@@ -1,5 +1,5 @@
 {
-    "model_dir": "hlca_scanvi_reference",
+    "model_dir": "hlca_reference_scanvi",
     "model_class": "SCANVI",
     "repo_name": "scvi-tools/human-lung-cell-atlas-scanvi",
     "extra_data_kwargs": {
@@ -7,7 +7,8 @@
         "legacy_model_hash": "a7cd60f4342292b3cba54545bcd8a34decdc8e6b82163f009273d543e7e3910e",
         "legacy_model_dir": "hlca_scanvi_reference_legacy",
         "reference_adata_cxg_id": "066943a2-fdac-4b29-b348-40cede398e4e",
-        "reference_adata_fname": "hlca_core.h5ad"
+        "reference_adata_fname": "hlca_core.h5ad",
+        "large_training_file_name": "hlca_core.h5ad"
     },
     "metadata": {
         "training_data_url": "https://cellxgene.cziscience.com/collections/6f6d381a-7701-4781-935c-db10d30de293",

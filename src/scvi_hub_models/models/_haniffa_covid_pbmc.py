@@ -18,14 +18,11 @@ class _Workflow(BaseModelWorkflow):
 
         adata_path = os.path.join(self.save_dir, self.config['extra_data_kwargs']["reference_adata_fname"])
         if not os.path.exists(adata_path):
-            # TODO for next LTX remove census_version='latest'.
-            download_source_h5ad(self.config['extra_data_kwargs']["reference_adata_cxg_id"], to_path=adata_path, census_version='latest')
+            download_source_h5ad(self.config['extra_data_kwargs']["reference_adata_cxg_id"], to_path=adata_path)
         return sc.read_h5ad(adata_path)
 
     def _preprocess_adata(self, adata: AnnData) -> AnnData:
         import scanpy as sc
-
-        print(adata, adata.X.data)
 
         sc.pp.filter_genes(adata, min_counts=3)
         adata.layers["counts"] = adata.X.copy()
@@ -38,20 +35,28 @@ class _Workflow(BaseModelWorkflow):
             batch_key="sample_id",
             span=1.0,
         )
-        protein_adata = AnnData(adata.obsm["protein_expression"])
+        protein_adata = AnnData(
+            adata.uns['antibody_raw.X'].toarray(),
+            obs=adata.obs,
+            var=adata.uns['antibody_features'])
+
         protein_adata.obs_names = adata.obs_names
-        del adata.obsm["protein_expression"]
-        adata = MuData({"rna": adata, "protein": protein_adata})
+        del adata.uns['antibody_raw.X']
+        del adata.uns['antibody_features']
+        del adata.uns['antibody_X']
+        del adata.uns['neighbors']
+        mdata = MuData({"rna": adata, "protein": protein_adata})
 
-        return adata
+        return mdata
 
-    def load_adata(self) -> AnnData | None:
+    def download_adata(self, path) -> AnnData | None:
         """Download and load the dataset."""
         logger.info(f"Saving dataset to {self.save_dir} and preprocessing.")
         if self.dry_run:
             return None
         adata = self._load_adata()
         mdata = self._preprocess_adata(adata)
+        mdata.write_h5mu(path)
         return mdata
 
     def _initialize_model(self, mdata: MuData) -> TOTALVI:
@@ -59,7 +64,7 @@ class _Workflow(BaseModelWorkflow):
             mdata,
             rna_layer="counts",
             protein_layer=None,
-            batch_key="sample_id",
+            batch_key="donor_id",
             modalities={
                 "rna_layer": "rna",
                 "protein_layer": "protein",
@@ -70,11 +75,11 @@ class _Workflow(BaseModelWorkflow):
 
     def _train_model(self, model: TOTALVI) -> TOTALVI:
         """Train the scVI model."""
-        model.train(max_epochs=200)
+        model.train(max_epochs=50)
 
         return model
 
-    def get_model(self, adata) -> TOTALVI | None:
+    def load_model(self, adata) -> TOTALVI | None:
         """Initialize and train the scVI model."""
         logger.info("Training the scVI model.")
         if self.dry_run:
@@ -85,7 +90,7 @@ class _Workflow(BaseModelWorkflow):
     def run(self):
         super().run()
 
-        mdata = self.load_adata()
+        mdata = self.get_adata()
         model = self.get_model(mdata)
         model_path = self._minify_and_save_model(model, mdata)
         hub_model = self._create_hub_model(model_path)

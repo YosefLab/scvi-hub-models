@@ -2,9 +2,11 @@
     "model_dir": "test_scvi",
     "model_class": "SCVI",
     "repo_name": "scvi-tools/test-scvi",
+    "extra_data_kwargs": {
+        "large_training_file_name": "test_data.h5ad"
+    },
     "collection_name": "test",
     "minify_model": false,
-    "extra_data_kwargs": {},
     "metadata": {
         "tissues": ["synthetic"],
         "data_modalities": ["rna"],

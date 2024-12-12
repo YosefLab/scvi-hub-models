@@ -31,13 +31,14 @@ class _Workflow(BaseModelWorkflow):
 
         return adata
 
-    def load_adata(self) -> AnnData | None:
+    def download_adata(self, path) -> AnnData | None:
         """Download and load the dataset."""
         logger.info(f"Saving heart cell atlas dataset to {self.save_dir}.")
         if self.dry_run:
             return None
         adata = self._load_adata()
         adata = self._preprocess_adata(adata)
+        adata.write_h5ad(path)
         return adata
 
     def _initialize_model(self, adata: AnnData) -> SCVI:
@@ -51,11 +52,11 @@ class _Workflow(BaseModelWorkflow):
 
     def _train_model(self, model: SCVI) -> SCVI:
         """Train the scVI model."""
-        model.train(max_epochs=5)
+        model.train(max_epochs=200)
 
         return model
 
-    def get_model(self, adata) -> SCVI | None:
+    def load_model(self, adata) -> SCVI | None:
         """Initialize and train the scVI model."""
         logger.info("Training the scVI model.")
         if self.dry_run:
@@ -66,7 +67,7 @@ class _Workflow(BaseModelWorkflow):
     def run(self):
         super().run()
 
-        adata = self.load_adata()
+        adata = self.get_adata()
         model = self.get_model(adata)
         model_path = self._minify_and_save_model(model, adata)
         hub_model = self._create_hub_model(model_path)
