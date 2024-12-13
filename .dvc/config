@@ -4,4 +4,5 @@
 ['remote "gdrive_remote"']
     url = gdrive://1MbX5Au5QRgagdXUaV9xvgLB9lOEVbfbQ
 ['remote "s3_remote"']
-    url = s3://dvc-filesystem/scvi-hub-large-files/
+    url = s3://dvc-filesystem/scvi-hub-large-files
+    region = us-west-1

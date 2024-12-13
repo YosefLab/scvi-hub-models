@@ -2,4 +2,4 @@ outs:
 - md5: 91bb92467e4f291e0ba0c1663dfabc96
   size: 1008864
   hash: md5
-  path: test_data.h5ad
+  path: test.h5ad
