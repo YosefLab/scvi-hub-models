@@ -26,8 +26,18 @@ class _Workflow(BaseModelWorkflow):
     # with the already-downloaded file without needing dvc-gdrive.
     # ------------------------------------------------------------------
 
+    @staticmethod
+    def _is_valid_hdf5(path: str) -> bool:
+        """Return True iff *path* exists and is a readable HDF5 file."""
+        try:
+            import h5py
+            with h5py.File(path, "r"):
+                return True
+        except Exception:
+            return False
+
     def get_adata(self) -> anndata.AnnData | None:
-        """Return the full Tabula Sapiens adata, downloading only if absent."""
+        """Return the full Tabula Sapiens adata, downloading only if absent/corrupt."""
         if self.dry_run:
             return None
 
@@ -35,6 +45,12 @@ class _Workflow(BaseModelWorkflow):
             _repo_path, "data",
             self.config["extra_data_kwargs"]["large_training_file_name"],
         )
+
+        if os.path.exists(path_file) and not self._is_valid_hdf5(path_file):
+            _print_status(
+                f"WARNING: existing file at {path_file} is not a valid HDF5 — re-downloading."
+            )
+            os.remove(path_file)
 
         if not os.path.exists(path_file):
             _print_status(f"Downloading Tabula Sapiens dataset → {path_file}")
@@ -48,12 +64,20 @@ class _Workflow(BaseModelWorkflow):
         return adata
 
     def _download_h5ad(self, path: str) -> None:
-        """Stream the h5ad directly from CellXGene."""
+        """Stream the h5ad directly from CellXGene, using a .tmp file to avoid
+        leaving a partial download that would be mistaken for a valid cache entry."""
         import urllib.request
 
         url = self.config["extra_data_kwargs"]["reference_adata_url"]
-        logger.info(f"Fetching {url}")
-        urllib.request.urlretrieve(url, path)
+        tmp_path = path + ".tmp"
+        logger.info(f"Fetching {url} → {tmp_path}")
+        try:
+            urllib.request.urlretrieve(url, tmp_path)
+            os.rename(tmp_path, path)
+        except Exception:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+            raise
 
     # ------------------------------------------------------------------
     # Per-tissue pre-processing
@@ -111,9 +135,16 @@ class _Workflow(BaseModelWorkflow):
     # Resume helpers
     # ------------------------------------------------------------------
 
+    # Maps user-facing model names to their actual scvi-tools class names, used to
+    # match the directory that _minify_and_save_model creates (mini_{classname.lower()}).
+    _MODEL_CLASS_NAMES: dict[str, str] = {
+        "Stereoscope": "RNAStereoscope",
+    }
+
     def _tissue_model_save_dir(self, tissue: str, model_name: str) -> str:
         """Return a stable, tissue-specific save path for a minified model."""
-        return os.path.join(self.save_dir, tissue, f"mini_{model_name.lower()}")
+        class_name = self._MODEL_CLASS_NAMES.get(model_name, model_name)
+        return os.path.join(self.save_dir, tissue, f"mini_{class_name.lower()}")
 
     # ------------------------------------------------------------------
     # Model training helpers
@@ -207,6 +238,10 @@ class _Workflow(BaseModelWorkflow):
     # Main workflow
     # ------------------------------------------------------------------
 
+    def _tissue_raw_scvi_save_dir(self, tissue: str) -> str:
+        """Return a stable path for a non-minified (raw) SCVI checkpoint used to init SCANVI."""
+        return os.path.join(self.save_dir, tissue, "raw_scvi")
+
     def run(self):
         super().run()
 
@@ -231,17 +266,41 @@ class _Workflow(BaseModelWorkflow):
 
             tissue_adata = self._get_tissue_adata(adata, tissue)
 
-            # SCVI is always trained first because SCANVI is initialised from it
-            # (before any minification of the SCVI model occurs).
             needs_scvi = "SCVI" in models_to_train or "SCANVI" in models_to_train
+            needs_scanvi = "SCANVI" in models_to_train
+
+            scvi_mini_path = self._tissue_model_save_dir(tissue, "SCVI")
+            scanvi_mini_path = self._tissue_model_save_dir(tissue, "SCANVI")
+            raw_scvi_path = self._tissue_raw_scvi_save_dir(tissue)
+
             scvi_model = None
+            scanvi_model = None
+
             if needs_scvi:
-                scvi_model_path = self._tissue_model_save_dir(tissue, "SCVI")
-                if os.path.exists(scvi_model_path):
-                    print(f"  [SCVI] Found saved model at {scvi_model_path} — loading.", flush=True)
-                    import scvi as scvi_tools
-                    scvi_model = scvi_tools.model.SCVI.load(scvi_model_path, adata=tissue_adata)
-                else:
+                scanvi_needs_training = needs_scanvi and not os.path.exists(scanvi_mini_path)
+
+                if scanvi_needs_training:
+                    # SCANVI must be trained from a *non-minified* SCVI model.
+                    # Load the raw SCVI checkpoint if available; otherwise train from scratch.
+                    if os.path.exists(raw_scvi_path):
+                        _print_status(f"  [{tissue}] Loading SCVI raw checkpoint for SCANVI init …")
+                        import scvi as scvi_tools
+                        scvi_model = scvi_tools.model.SCVI.load(raw_scvi_path, adata=tissue_adata)
+                    else:
+                        _print_status(f"  [{tissue}] Training SCVI …")
+                        scvi_model = self._train_scvi(tissue_adata)
+                        # Persist a raw (non-minified) checkpoint so that SCANVI can be
+                        # (re-)initialised on resume, even after the minified copy is saved.
+                        print(f"  [SCVI] Saving raw checkpoint → {raw_scvi_path}", flush=True)
+                        os.makedirs(raw_scvi_path, exist_ok=True)
+                        scvi_model.save(raw_scvi_path, overwrite=True, save_anndata=False)
+
+                    # Train SCANVI now — before any minification of the SCVI model.
+                    _print_status(f"  [{tissue}] Training SCANVI from non-minified SCVI …")
+                    scanvi_model = self._train_scanvi(scvi_model)
+
+                elif not os.path.exists(scvi_mini_path):
+                    # Only SCVI needs training (SCANVI is done or not requested).
                     _print_status(f"  [{tissue}] Training SCVI …")
                     scvi_model = self._train_scvi(tissue_adata)
 
@@ -267,7 +326,8 @@ class _Workflow(BaseModelWorkflow):
                     model = scvi_model
                     adata_for_model = tissue_adata
                 elif model_name == "SCANVI":
-                    model = self._train_scanvi(scvi_model)
+                    # scanvi_model was trained before SCVI was minified (see above).
+                    model = scanvi_model
                     adata_for_model = tissue_adata
                 elif model_name == "CondSCVI":
                     model = self._train_condscvi(tissue_adata.copy())
