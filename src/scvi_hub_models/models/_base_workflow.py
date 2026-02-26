@@ -6,7 +6,9 @@ from tempfile import TemporaryDirectory
 import anndata
 import git
 import mudata
-from anndata import __version__ as anndata_version
+from importlib.metadata import version as _importlib_version
+
+anndata_version = _importlib_version("anndata")
 from dvc.repo import Repo
 from frozendict import frozendict
 from pooch import retrieve
@@ -123,22 +125,47 @@ class BaseModelWorkflow:
             raise AttributeError("`reload_model` can only be set once.")
         self._reload_model = value
 
+    def _dvc_push_and_git_push(self, path_file: str) -> None:
+        """Add path to DVC, commit, and push to remote. Warns instead of crashing on remote errors."""
+        dvc_repo.add(path_file)
+        try:
+            git_repo.index.commit(f"Track {path_file} with DVC")
+        except Exception as e:
+            logger.warning(f"Git commit failed (skipping): {e}")
+        try:
+            dvc_repo.push()
+        except Exception as e:
+            logger.warning(f"DVC push failed (skipping — install dvc-gdrive or dvc-s3 for remote sync): {e}")
+        try:
+            git_repo.remote().push()
+        except Exception as e:
+            logger.warning(f"Git remote push failed (skipping): {e}")
+
+    def _dvc_pull(self, path_file: str) -> None:
+        """Pull path from DVC remote. Falls back to local file if remote unavailable."""
+        try:
+            dvc_repo.pull([path_file])
+        except Exception as e:
+            if os.path.exists(path_file):
+                logger.warning(f"DVC pull failed but local file exists, using it: {e}")
+            else:
+                raise RuntimeError(
+                    f"DVC pull failed and '{path_file}' does not exist locally. "
+                    f"Run with --reload_data True to download the file. Error: {e}"
+                ) from e
+
     def get_adata(self) -> anndata.AnnData | None:
         """Download and load the dataset."""
         logger.info("Loading dataset.")
         if self.dry_run:
             return None
+        path_file = os.path.join(f'{repo_path}/data/', self.config['extra_data_kwargs']['large_training_file_name'])
         if self.reload_data:
-            path_file = os.path.join(f'{repo_path}/data/', self.config['extra_data_kwargs']['large_training_file_name'])
             print(path_file)
             adata = self.download_adata(path_file)
-            dvc_repo.add(path_file)
-            git_repo.index.commit(f"Track {path_file} with DVC")
-            dvc_repo.push()
-            git_repo.remote().push()
+            self._dvc_push_and_git_push(path_file)
         else:
-            path_file = os.path.join(f'{repo_path}/data/', self.config['extra_data_kwargs']['large_training_file_name'])
-            dvc_repo.pull([path_file])
+            self._dvc_pull(path_file)
             if path_file.endswith(".h5mu"):
                 adata = mudata.read_h5mu(path_file)
             else:
@@ -150,17 +177,13 @@ class BaseModelWorkflow:
         logger.info("Loading model.")
         if self.dry_run:
             return None
+        path_file = os.path.join(f'{repo_path}/data/', self.config['model_dir'])
         if self.reload_model:
-            path_file = os.path.join(f'{repo_path}/data/', self.config['model_dir'])
             model = self.load_model(adata)
             model.save(path_file, overwrite=True, save_anndata=False)
-            dvc_repo.add(path_file)
-            git_repo.index.commit(f"Track {path_file} with DVC")
-            dvc_repo.push()
-            git_repo.remote().push()
+            self._dvc_push_and_git_push(path_file)
         else:
-            path_file = os.path.join(f'{repo_path}/data/', self.config['model_dir'])
-            dvc_repo.pull([path_file])
+            self._dvc_pull(path_file)
             model = self.default_load_model(adata, self.config['model_class'], path_file)
         return model
 
@@ -224,12 +247,15 @@ class BaseModelWorkflow:
         if not os.path.exists(mini_model_path):
             os.makedirs(mini_model_path)
         if self.config.get("create_criticism_report", True) and model.__class__.__name__ in SUPPORTED_PPC_MODELS:
-            create_criticism_report(
-                model,
-                save_folder=mini_model_path,
-                n_samples=self.config["criticism_settings"].get("n_samples", 3),
-                label_key=self.config["criticism_settings"].get("cell_type_key", None)
-            )
+            try:
+                create_criticism_report(
+                    model,
+                    save_folder=mini_model_path,
+                    n_samples=self.config["criticism_settings"].get("n_samples", 3),
+                    label_key=self.config["criticism_settings"].get("cell_type_key", None)
+                )
+            except Exception as e:
+                logger.warning(f"Criticism report failed (skipping): {e}")
 
         if self.config.get("minify_model", True) and model.__class__.__name__ in SUPPORTED_MINIFIED_MODELS:
             qzm_key = f"{model_name.lower()}_latent_qzm"
@@ -277,7 +303,7 @@ class BaseModelWorkflow:
             references=metadata.get("references", None),
         )
 
-        return HubModel(model_path, hub_metadata, model_card)
+        return HubModel(model_path, metadata=hub_metadata, model_card=model_card)
 
     def _upload_hub_model(self, hub_model: HubModel, repo_name: str | None = None, **kwargs) -> HubModel:
         """Upload the HubModel to Hugging Face."""
