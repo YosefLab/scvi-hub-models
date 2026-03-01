@@ -126,7 +126,8 @@ class BaseModelWorkflow:
         self._reload_model = value
 
     def _dvc_push_and_git_push(self, path_file: str) -> None:
-        """Add path to DVC, commit, and push to remote. Warns instead of crashing on remote errors."""
+        """Add path to DVC and commit. Remote push is skipped (gdrive requires interactive OAuth).
+        To push to DVC remote manually: dvc push"""
         try:
             dvc_repo.add(path_file)
         except Exception as e:
@@ -135,14 +136,7 @@ class BaseModelWorkflow:
             git_repo.index.commit(f"Track {path_file} with DVC")
         except Exception as e:
             logger.warning(f"Git commit failed (skipping): {e}")
-        try:
-            dvc_repo.push()
-        except Exception as e:
-            logger.warning(f"DVC push failed (skipping — install dvc-gdrive or dvc-s3 for remote sync): {e}")
-        try:
-            git_repo.remote().push()
-        except Exception as e:
-            logger.warning(f"Git remote push failed (skipping): {e}")
+        logger.info("Skipping DVC remote push (requires interactive OAuth). Run 'dvc push' manually if needed.")
 
     def _dvc_pull(self, path_file: str) -> None:
         """Pull path from DVC remote. Falls back to local file if remote unavailable."""
