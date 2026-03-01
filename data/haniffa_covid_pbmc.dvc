@@ -1,6 +1,6 @@
 outs:
-- md5: 9727ed6842ec135c97bdaf9fe9475a10.dir
-  size: 30431585
-  nfiles: 1
+- md5: 97f2b84871ebad602614115cc6081713.dir
+  size: 7091454778
+  nfiles: 2
   hash: md5
   path: haniffa_covid_pbmc
