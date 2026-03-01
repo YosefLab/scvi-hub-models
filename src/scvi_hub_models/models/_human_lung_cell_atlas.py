@@ -114,8 +114,9 @@ class _Workflow(BaseModelWorkflow):
         logging.info("Loading data.")
         if self.dry_run:
             return None
+        model_path = os.path.join(self.save_dir, self.config["model_dir"])
         ref_adata = self._download_reference_adata()
-        ref_adata = self._preprocess_reference_adata(ref_adata, self.model_path)
+        ref_adata = self._preprocess_reference_adata(ref_adata, model_path)
         ref_adata = self._postprocess_reference_adata(ref_adata)
         ref_adata.write_h5ad(path)
         return ref_adata

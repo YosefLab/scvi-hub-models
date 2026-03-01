@@ -80,7 +80,7 @@ class BaseModelWorkflow:
             raise AttributeError("`save_dir` can only be set once.")
         elif path is None:
             path = TemporaryDirectory().name
-        Path(path).parent.mkdir(parents=True, exist_ok=True)
+        Path(path).mkdir(parents=True, exist_ok=True)
         self._save_dir = path
 
     @property
@@ -127,7 +127,10 @@ class BaseModelWorkflow:
 
     def _dvc_push_and_git_push(self, path_file: str) -> None:
         """Add path to DVC, commit, and push to remote. Warns instead of crashing on remote errors."""
-        dvc_repo.add(path_file)
+        try:
+            dvc_repo.add(path_file)
+        except Exception as e:
+            logger.warning(f"DVC add failed (skipping): {e}")
         try:
             git_repo.index.commit(f"Track {path_file} with DVC")
         except Exception as e:
