@@ -7,6 +7,9 @@ In models, we provide routines for uploading the files.
 The usage pattern is to call `python src/scvi_hub_models/ --model_name "MODEL"` with model being one of the file names in config. You can run dry_run
 to only execute the procedure without any real execution and can define a save_dir by default we store things in a temporary folder.
 
+run example:
+ `python -m scvi_hub_models --model_name tabula_sapiens --reload_data True --reload_model True --save_dir ./tabula_sapiens_trained`
+
 [scverse-discourse]: https://discourse.scverse.org/
 [issue-tracker]: https://github.com/yoseflab/scvi-hub-models/issues
 [changelog]: https://scvi-hub-models.readthedocs.io/latest/changelog.html

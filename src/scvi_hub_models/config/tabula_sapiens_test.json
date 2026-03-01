@@ -1,21 +1,32 @@
 {
-    "model_dir": "tabula_sapiens",
+    "model_dir": "tabula_sapiens_test",
     "model_class": "various",
     "base_repo_name": "scvi-tools/tabula-sapiens",
     "extra_data_kwargs": {
-        "tissues": ["Vasculature"],
-        "model_hashes": {
-            "Vasculature": "79e2a4a93a024ded96c8c294c328236ca8c83839c171d7adc49f95c781cf9503"
-        },
-        "adata_hashes": {
-            "Vasculature": "bf4ce2a88de4fdab1e2f07128dc25aa055064c853e767e1cc015ce89d49ddf4c"
-        },
-        "base_url": "https://zenodo.org/records/7608635/files/",
-        "models_suffix": "_pretrained_models.tar.gz",
-        "adata_suffix": "_training_data.h5ad",
-        "models": ["SCVI", "SCANVI", "CondSCVI", "StereoScope"]
+        "tissues": ["Lung"],
+        "reference_adata_url": "https://datasets.cellxgene.cziscience.com/40f8b1a3-9f76-4ac4-8761-32078555ed4e.h5ad",
+        "reference_adata_fname": "tabula_sapiens_test.h5ad",
+        "large_training_file_name": "tabula_sapiens_test.h5ad",
+        "tissue_column": "tissue_in_publication",
+        "batch_key": "donor_assay",
+        "labels_key": "cell_type",
+        "unknown_celltype_label": "unknown",
+        "models": ["SCVI", "SCANVI", "CondSCVI", "Stereoscope"],
+        "max_epochs": 10,
+        "scvi_model_kwargs": {
+            "dropout_rate": 0.05,
+            "dispersion": "gene",
+            "n_layers": 3,
+            "n_latent": 20,
+            "gene_likelihood": "nb",
+            "use_batch_norm": "none",
+            "use_layer_norm": "both",
+            "encode_covariates": true
+        }
     },
     "metadata": {
+        "training_data_url": "https://cellxgene.cziscience.com/datasets/5a495302-b7cd-4bf9-853e-95627b00bb03",
+        "training_code_url": "https://github.com/YosefLab/scvi-hub-models/blob/main/src/scvi_hub_models/TS_train_all_tissues.ipynb",
         "tissues": ["various"],
         "data_modalities": ["rna"],
         "data_is_annotated": true,
