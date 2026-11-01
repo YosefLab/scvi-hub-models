@@ -117,7 +117,7 @@ only because an outdated sphinx plugin pins an older version.
 To initialize a virtual environment in the `.venv` directory of your project, simply run
 
 ```bash
-uv sync --all-extras
+uv sync --all-groups
 ```
 
 The `.venv` directory is typically automatically discovered by IDEs such as VS Code.
