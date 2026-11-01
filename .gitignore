@@ -6,26 +6,21 @@ buck-out/
 # Compiled files
 .venv/
 __pycache__/
-.mypy_cache/
-.ruff_cache/
-/tabula_sapiens_partial/
+.*cache/
 
 # Distribution / packaging
-/build/
 /dist/
-/*.egg-info/
 
 # Tests and coverage
-/.pytest_cache/
-/.cache/
+/node_modules/
+/.coverage*
 
 # docs
 /docs/generated/
 /docs/_build/
 
-# IDEs
-/.idea/
-/.vscode/
-
-/node_modules/
+# Project-specific
+/tabula_sapiens_partial/
 /test/
+# NOTE: data/ is not ignored here; DVC pointer files (data/*.dvc) are tracked, raw data is ignored via data/.gitignore
+/.idea/
