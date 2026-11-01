@@ -1,0 +1,41 @@
+{
+    "model_dir": "tabula_sapiens_test",
+    "model_class": "various",
+    "base_repo_name": "scvi-tools/tabula-sapiens",
+    "extra_data_kwargs": {
+        "tissues": ["Lung"],
+        "reference_adata_url": "https://datasets.cellxgene.cziscience.com/40f8b1a3-9f76-4ac4-8761-32078555ed4e.h5ad",
+        "reference_adata_fname": "tabula_sapiens_test.h5ad",
+        "large_training_file_name": "tabula_sapiens_test.h5ad",
+        "tissue_column": "tissue_in_publication",
+        "batch_key": "donor_assay",
+        "labels_key": "cell_type",
+        "unknown_celltype_label": "unknown",
+        "models": ["SCVI", "SCANVI", "CondSCVI", "Stereoscope"],
+        "max_epochs": 10,
+        "scvi_model_kwargs": {
+            "dropout_rate": 0.05,
+            "dispersion": "gene",
+            "n_layers": 3,
+            "n_latent": 20,
+            "gene_likelihood": "nb",
+            "use_batch_norm": "none",
+            "use_layer_norm": "both",
+            "encode_covariates": true
+        }
+    },
+    "metadata": {
+        "training_data_url": "https://cellxgene.cziscience.com/datasets/5a495302-b7cd-4bf9-853e-95627b00bb03",
+        "training_code_url": "https://github.com/YosefLab/scvi-hub-models/blob/main/src/scvi_hub_models/TS_train_all_tissues.ipynb",
+        "tissues": ["various"],
+        "data_modalities": ["rna"],
+        "data_is_annotated": true,
+        "license_info": "cc-by-4.0",
+        "description": "Tabula Sapiens is a benchmark, first-draft human cell atlas of nearly 500,000 cells from 24 organs of 15 normal human subjects.",
+        "references": "The Tabula Sapiens Consortium. The Tabula Sapiens: A multiple-organ, single-cell transcriptomic atlas of humans. Science, May 2022. doi:10.1126/science.abl4896"
+    },
+    "criticism_settings": {
+        "n_samples": 3,
+        "cell_type_key": "cell_type"
+    }
+}

@@ -12,10 +12,15 @@ __pycache__/
 /dist/
 
 # Tests and coverage
-/data/
 /node_modules/
 /.coverage*
 
 # docs
 /docs/generated/
 /docs/_build/
+
+# Project-specific
+/tabula_sapiens_partial/
+/test/
+# NOTE: data/ is not ignored here; DVC pointer files (data/*.dvc) are tracked, raw data is ignored via data/.gitignore
+/.idea/

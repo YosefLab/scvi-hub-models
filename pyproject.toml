@@ -4,15 +4,16 @@ requires = [ "hatchling" ]
 
 [project]
 name = "scvi-hub-models"
-version = "0.0.1"
-description = "A very interesting piece of code"
+version = "0.1.0"
+description = "Reproducibility workflows for pre-trained scvi-tools models on Hugging Face."
 readme = "README.md"
 license = { file = "LICENSE" }
 maintainers = [
-  { name = "Martin Kim", email = "martinkim@berkeley.edu" },
+  { name = "Can Ergen", email = "cergen@berkeley.edu" },
 ]
 authors = [
   { name = "Martin Kim" },
+  { name = "Can Ergen" },
 ]
 requires-python = ">=3.12"
 classifiers = [
@@ -22,14 +23,18 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-  "anndata",
+  "cellxgene-census>=1.10.2",
+  "click",
+  "frozendict",
+  "pooch",
+  "scvi-tools[hub,scanpy]>=1.2.0",
   # for debug logging (referenced from the issue template)
   "session-info2",
 ]
 # https://docs.pypi.org/project_metadata/#project-urls
 urls.Documentation = "https://scvi-hub-models.readthedocs.io/"
-urls.Homepage = "https://github.com/martinkim0/scvi-hub-models"
-urls.Source = "https://github.com/martinkim0/scvi-hub-models"
+urls.Homepage = "https://github.com/YosefLab/scvi-hub-models"
+urls.Source = "https://github.com/YosefLab/scvi-hub-models"
 
 [dependency-groups]
 dev = [
