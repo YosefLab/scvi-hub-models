@@ -4,12 +4,12 @@ requires = [ "hatchling" ]
 
 [project]
 name = "scvi-hub-models"
-version = "0.1.0"
+version = "0.1.1"
 description = "Reproducibility workflows for pre-trained scvi-tools models on Hugging Face."
 readme = "README.md"
 license = { file = "LICENSE" }
 maintainers = [
-  { name = "Can Ergen", email = "cergen@berkeley.edu" },
+  { name = "Ori Kronfeld", email = "ori.kronfeld@weizmann.ac.il" },
 ]
 authors = [
   { name = "Martin Kim" },
