@@ -43,7 +43,7 @@ class _Workflow(BaseModelWorkflow):
 
     def _download_reference_adata(self) -> anndata.AnnData:
         """Download the reference (core) dataset from CxG."""
-        from cellxgene_census import download_source_h5ad
+        from scvi_hub_models.models._cxg import download_source_h5ad
 
         adata_path = os.path.join(self.save_dir, self.config['extra_data_kwargs']["reference_adata_fname"])
         if not os.path.exists(adata_path):
